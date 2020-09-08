@@ -24,43 +24,50 @@ def align_cut(img, bx, by):
     # top
     for x in range(255):
         if by + 254 >= height - 1 or bx + 254 >= width - 1:
-            break
+            return False
         if not color_is_black(img[by][bx + x]):
-            return align_cut(img, bx, by + 1)
+            return False
 
     # bottom
     for x in range(255):
         if by + 254 >= height - 1 or bx + 254 >= width - 1:
-            break
+            return False
         if not color_is_black(img[by + 254][bx + x]):
-            return align_cut(img, bx, by - 1)
+            return False
 
     # left
     for y in range(255):
         if by + 254 >= height - 1 or bx >= width - 1:
             break
         if not color_is_black(img[by + y][bx]):
-            return align_cut(img, bx + 1, by)
+            return False
 
     # right
     for y in range(255):
         if by + 254 >= height - 1 or bx + 254 >= width - 1:
-            break
+            return False
         if not color_is_black(img[by + y][bx + 254]):
-            return align_cut(img, bx - 1, by)
+            return False
 
-    return bx, by
+    return True
 
 
-def cut_image(img):
-    height, width, channels = img.shape
-    h_cuts = math.floor(width / 255)
-    v_cuts = math.floor(height / 255)
+def cut_image(mask, original):
+    height, width, channels = original.shape
 
-    chunk_coords = [align_cut(img, x * 255, y * 255) for x in range(h_cuts) for y in range(v_cuts)]
+    chunk_coords = []
+    for x in range(0, width, 50):
+        print(x)
+        for y in range(0, height, 50):
+            if align_cut(mask, x, y):
+                chunk_coords.append((x, y))
 
     print(chunk_coords)
-    chunks = [(x, y, cut_chunk(img, x, y)) for (x, y) in chunk_coords]
+    mask_chunks = [(x, y, cut_chunk(mask, x, y)) for (x, y) in chunk_coords]
+    original_chunks = [(x, y, cut_chunk(original, x, y)) for (x, y) in chunk_coords]
 
-    for (x, y, chunk) in chunks:
-        cv2.imwrite(f"out/{x}{y}.png", chunk)
+    for (x, y, chunk) in mask_chunks:
+        cv2.imwrite(f"out/{x}{y}_mask.png", chunk)
+
+    for (x, y, chunk) in original_chunks:
+        cv2.imwrite(f"out/{x}{y}_original.png", chunk)
