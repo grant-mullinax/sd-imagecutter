@@ -1,4 +1,4 @@
-import math
+import os
 import cv2
 import numpy as np
 
@@ -65,6 +65,9 @@ def cut_image(mask, original):
     print(chunk_coords)
     mask_chunks = [(x, y, cut_chunk(mask, x, y)) for (x, y) in chunk_coords]
     original_chunks = [(x, y, cut_chunk(original, x, y)) for (x, y) in chunk_coords]
+
+    if not os.path.exists("out"):
+        os.makedirs("out")
 
     for (x, y, chunk) in mask_chunks:
         cv2.imwrite(f"out/{x}{y}_mask.png", chunk)
