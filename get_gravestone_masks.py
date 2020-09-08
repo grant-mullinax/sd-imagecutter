@@ -1,8 +1,5 @@
 import argparse
 import cv2
-from collections import namedtuple
-
-Point = namedtuple('Point', 'x y')
 
 
 # gets the brightness of a color from 0-1
@@ -70,43 +67,6 @@ def add_border(pixels, size):
         return add_border(returned_pixels, size - 1)
 
 
-# receives a click event and gets all adjacent pixels flooding out of the same shade, ignoring darkness
-# then removes 1% of the pixels as a border to remove any noise on the edges to get the main core of the block
-# then adds that amount as a border to restore the size
-def get_polygon(event, x, y, flags, param):
-    if event == cv2.EVENT_LBUTTONDOWN:
-        reference_color = image[y, x]
-        points = flood_for_threshold(
-            x, y, lambda pixel: color_threshold(image, pixel, reference_color), set()
-        )
-        for (x, y) in points:
-            image[y][x] = (0, 255, 0)
-
-        remove_width = int(len(points) / 75)
-        thin_border = remove_border(points, remove_width)
-
-        expand_width = int(len(points) / 25)
-        expanded_border = add_border(thin_border, expand_width)
-        for (x, y) in expanded_border:
-            image[y][x] = (255, 0, 255)
-
-        for (x, y) in thin_border:
-            image[y][x] = (0, 255, 0)
-
-        # visited = set()
-        # flooded_edges = set()
-        # for (x, y) in thin_border:
-        #     print(visited)
-        #     flooded_edges.add(flood_for_threshold(
-        #         x,
-        #         y,
-        #         lambda pixel: edges[pixel[1], pixel[0]] < .5,
-        #         visited
-        #     ))
-
-        cv2.imshow("image", image)
-
-
 def get_gravestone_mask(img, coord):
     x, y = coord
     reference_color = img[y, x]
@@ -139,7 +99,6 @@ def flood_for_threshold(x, y, threshold, visited):
     if (x, y) in visited:
         return []
     if threshold((x, y)):
-        # image[y][x] = (255, 255, 255)
         visited.add((x, y))
         return_list = [(x, y)]
         return_list += flood_for_threshold(x + 1, y, threshold, visited)
@@ -151,6 +110,16 @@ def flood_for_threshold(x, y, threshold, visited):
         return []
 
 
+# receives a click event and gets all adjacent pixels flooding out of the same shade, ignoring darkness
+# then removes 1% of the pixels as a border to remove any noise on the edges to get the main core of the block
+# then adds that amount as a border to restore the size
+def click(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        points = get_gravestone_mask(main_image, (x, y))
+        for (x, y) in points:
+            main_image[y][x] = (0, 255, 0)
+
+
 if __name__ == '__main__':
     # construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
@@ -158,20 +127,20 @@ if __name__ == '__main__':
     args = vars(ap.parse_args())
 
     # load the image, clone it, and setup the mouse callback function
-    image = cv2.imread(args["image"])
-    edges = cv2.Canny(image, 60, 120)
+    main_image = cv2.imread(args["image"])
+    edges = cv2.Canny(main_image, 60, 120)
 
-    laplacian = cv2.Laplacian(image, cv2.CV_64F)
+    laplacian = cv2.Laplacian(main_image, cv2.CV_64F)
     blurred_laplacian = cv2.GaussianBlur(laplacian, (5, 5), 0)
 
-    clone = image.copy()
+    clone = main_image.copy()
     cv2.namedWindow("image")
-    cv2.setMouseCallback("image", get_polygon)
+    cv2.setMouseCallback("image", click)
 
     # keep looping until the 'c' key is pressed
     while True:
         cv2.imshow("edge", edges)
-        cv2.imshow("image", image)
+        cv2.imshow("image", main_image)
         cv2.imshow("lap", blurred_laplacian)
         key = cv2.waitKey(1) & 0xFF
         if key == ord("c"):
