@@ -4,10 +4,10 @@ import numpy as np
 
 
 def cut_chunk(img, bx, by):
-    chunk = np.zeros((255, 255, 3), np.uint8)
+    chunk = np.zeros((256, 256, 3), np.uint8)
 
-    for y in range(255):
-        for x in range(255):
+    for y in range(256):
+        for x in range(256):
             chunk[y][x] = img[y + by][x + bx]
 
     return chunk
