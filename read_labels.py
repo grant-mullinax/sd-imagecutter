@@ -1,6 +1,3 @@
-import struct
-
-
 def read_label(label):
     split_label = label.split()
     # we can discard the first label, they are all gravestones.

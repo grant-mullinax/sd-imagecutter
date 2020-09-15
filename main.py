@@ -1,6 +1,5 @@
 import cv2
 import argparse
-import numpy as np
 
 from read_labels import read_labels
 from get_gravestone_masks import get_gravestone_masks

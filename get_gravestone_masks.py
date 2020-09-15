@@ -10,7 +10,7 @@ def get_brightness(color):
 # this gets the "color" of the pixel, ignoring the shade.
 # so dark and light shades of a single color will be considered the same
 def get_scaled_color(color):
-    brightness = get_brightness(color)
+    brightness = get_brightness(color) + 0.001
     return color[0] / brightness, color[1] / brightness, color[2] / brightness
 
 
@@ -22,6 +22,9 @@ def get_color_diff(a, b):
 # weights and sums the brightness and color difference of two pixels and returns if it is within a threshold
 def color_threshold(img, pixel, reference):
     x, y = pixel
+    height, width, channels = img.shape
+    if not (0 <= x < width and 0 <= y < height):
+        return False
 
     color_diff = get_color_diff(get_scaled_color(img[y, x]), get_scaled_color(reference))
     brightness_diff = abs(get_brightness(img[y, x]) - get_brightness(reference))
@@ -70,7 +73,7 @@ def add_border(pixels, size):
 def get_gravestone_mask(img, coord):
     x, y = coord
     reference_color = img[y, x]
-    points = flood_for_threshold(
+    points = flood_for_threshold_nonrecursive(
         x, y, lambda pixel: color_threshold(img, pixel, reference_color), set()
     )
 
@@ -86,16 +89,16 @@ def get_gravestone_mask(img, coord):
 def get_gravestone_masks(img, coords):
     masks = []
     for coord in coords:
-        try:
-            masks.extend(get_gravestone_mask(img, coord))
-        except:
-            print("whoa")
+        masks.extend(get_gravestone_mask(img, coord))
 
     return masks
 
 
 # floods out and gets all pixels that are accepted by predicate threshold
 def flood_for_threshold(x, y, threshold, visited):
+    print(len(visited))
+    if len(visited) > 900:
+        return []
     if (x, y) in visited:
         return []
     if threshold((x, y)):
@@ -108,6 +111,32 @@ def flood_for_threshold(x, y, threshold, visited):
         return return_list
     else:
         return []
+
+
+def flood_for_threshold_nonrecursive(x, y, threshold, visited):
+    visited = set()
+    points_to_visit = {(x, y)}
+    return_list = set()
+
+    visits = 0
+    while len(points_to_visit) > 0:
+        px, py = points_to_visit.pop()
+        if (px, py) in visited:
+            continue
+        visits += 1
+        if visits % 100 == 0:
+            print(visits)
+        if visits > 2000:
+            return return_list
+        if threshold((px, py)):
+            visited.add((px, py))
+            return_list.add((px, py))
+            points_to_visit.add((px + 1, py))
+            points_to_visit.add((px - 1, py))
+            points_to_visit.add((px, py + 1))
+            points_to_visit.add((px, py - 1))
+
+    return return_list
 
 
 # receives a click event and gets all adjacent pixels flooding out of the same shade, ignoring darkness
@@ -139,9 +168,9 @@ if __name__ == '__main__':
 
     # keep looping until the 'c' key is pressed
     while True:
-        cv2.imshow("edge", edges)
+        # cv2.imshow("edge", edges)
         cv2.imshow("image", main_image)
-        cv2.imshow("lap", blurred_laplacian)
+        # cv2.imshow("lap", blurred_laplacian)
         key = cv2.waitKey(1) & 0xFF
         if key == ord("c"):
             break
