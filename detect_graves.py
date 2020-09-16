@@ -183,7 +183,7 @@ if __name__ == '__main__':
                 x_pos = (max_x + min_x)/2
                 y_pos = (max_y + min_y)/2
 
-                out_text += f"15 {x_pos/main_width} {y_pos/main_height} {width/main_width} {height/main_height}\n"
+                out_text += f"0 {x_pos/main_width} {y_pos/main_height} {width/main_width} {height/main_height}\n"
 
             f.write(out_text)
             f.close()
