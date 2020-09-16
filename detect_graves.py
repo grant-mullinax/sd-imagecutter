@@ -155,19 +155,17 @@ if __name__ == '__main__':
                 grave_masks = detect_graves_flood(main_image, reference_color, reference_value[1], reference_value[2])
                 total_mask = []
                 for grave in grave_masks:
-                    total_mask += grave
+                    if if_no_set_overlap(grave, grave_points):
+                        graves.append(grave)
+                        total_mask += grave
+                        grave_points.update(grave)
 
                 for (x, y) in masking.add_border(total_mask, 2):
                     if not (0 <= x < main_width and 0 <= y < main_height):
                         continue
                     display_image[y][x] = (0, 255, 0)
-
-                if if_no_set_overlap(grave_masks, grave_points):
-                    graves.extend(grave_masks)
-
-                grave_points.update(total_mask)
-
             reference_values = []
+
         if key == ord("f"):
             path = Path(args["image"])
             print(f"writing out to {path.parent}/{path.stem}.txt")

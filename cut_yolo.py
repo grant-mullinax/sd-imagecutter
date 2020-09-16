@@ -52,7 +52,4 @@ if __name__ == '__main__':
 
     bounding_boxes = [(px * main_width, py * main_height, w, h) for ((px, py), (w, h)) in labels]
 
-    # print(mask)
-    # display_image("mask", mask_img)
-
     cut_image_yolo(bounding_boxes, main_image)
