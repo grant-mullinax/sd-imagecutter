@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 from pathlib import Path
 
+
 def get_blobbiness(points):
     return 1 - count_edge_pixels(points) / len(points)
 
