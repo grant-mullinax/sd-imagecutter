@@ -68,6 +68,10 @@ if __name__ == '__main__':
     ap.add_argument("-s", "--scale", required=False, help="Amount to scale output images", default=1)
     args = vars(ap.parse_args())
 
+    if args["folder"] is None and (args["image"] is None or args["label"] is None):
+        print("please supply either folder or image argument")
+        exit()
+
     if args["folder"] is not None:
         for filename in os.listdir(args["folder"]):
             path = Path(args["folder"] + "/" + filename)
@@ -76,6 +80,3 @@ if __name__ == '__main__':
 
     if not (args["image"] is None or args["label"] is None):
         read_and_print_for_cut_image(args["image"], args["label"], args["scale"])
-
-    print("please supply either folder or image argument")
-    exit()
